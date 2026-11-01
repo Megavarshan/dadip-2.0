@@ -1,0 +1,57 @@
+# Local development stack for DADIP 2.0.
+#   cp .env.example .env && docker compose up --build
+# API docs: http://localhost:8000/api/docs
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dadip
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dadip}
+      POSTGRES_DB: dadip
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dadip"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports: ["1883:1883"]
+    volumes: [./infrastructure/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro]
+
+  migrate:
+    build: ./backend
+    command: ["alembic", "upgrade", "head"]
+    env_file: .env
+    environment:
+      DADIP_DATABASE_URL: postgresql+psycopg://dadip:${POSTGRES_PASSWORD:-dadip}@postgres:5432/dadip
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  api:
+    build: ./backend
+    env_file: .env
+    environment:
+      DADIP_DATABASE_URL: postgresql+psycopg://dadip:${POSTGRES_PASSWORD:-dadip}@postgres:5432/dadip
+      DADIP_REDIS_URL: redis://redis:6379/0
+      DADIP_MQTT_HOST: mosquitto
+    ports: ["8000:8000"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/api/v1/health/live')"]
+      interval: 10s
+      retries: 5
+
+volumes:
+  pgdata:

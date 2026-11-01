@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "dadip"
 version = "2.0.0a1"
 description = "DADIP 2.0 backend: AURA intelligence, cloud core, resilient communication engine, edge agent and network simulator"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = { text = "Apache-2.0" }
 dependencies = [
   "fastapi>=0.115",
@@ -44,8 +44,8 @@ markers = [
 ]
 
 [tool.ruff]
-line-length = 110
-target-version = "py311"
+line-length = 120
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "S"]
@@ -54,3 +54,4 @@ ignore = ["S101", "B008"]
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S", "B"]
 "dadip/simulation/*" = ["S311"]
+"migrations/versions/*" = ["E501"]

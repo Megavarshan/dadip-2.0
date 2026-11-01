@@ -1,139 +1,60 @@
-# DADIP — Decision-Admissibility Disaster Intelligence Platform
+# DADIP 2.0
 
-> **From fragmented disaster data to decision-admissible intelligence.**
+**Distributed AI-Driven Disaster Intelligence and Resilient Communication Platform**
 
-DADIP is a next-generation, AI-powered disaster intelligence and decision-support platform designed to modernize how government agencies, emergency operations centers, and disaster-response teams handle high-stakes emergencies.
+DADIP 2.0 is the successor to [DADIP](https://github.com/Megavarshan/disaster-ai), rebuilt as an AI-driven,
+cloud-edge disaster intelligence and resilient communication framework. The original repository is the frozen
+reference baseline and is never modified from here.
 
-During disasters, responders are often overwhelmed by fragmented information, unverified citizen reports, rapidly changing environmental conditions, limited resource visibility, and static dashboards that provide data without sufficient operational intelligence.
+> **Status: under active development (alpha).** This README lists only what exists and has been verified.
+> See [`docs/devlog.md`](docs/devlog.md) for progress and [`docs/status.md`](docs/status.md) for the
+> implemented / simulated / planned matrix.
 
-DADIP addresses this gap by creating a centralized command ecosystem that connects **incident intelligence, AI-powered risk assessment, decision-admissibility analysis, anomaly detection, geospatial intelligence, resource orchestration, and official reporting** into a single operational environment.
+## Subsystems
 
-The core objective is to transform:
+| Subsystem | Responsibility | Where |
+| --- | --- | --- |
+| AURA Intelligence Engine | Risk, reliability, distribution shift, decision admissibility | `backend/dadip/aura/` |
+| Cloud Intelligence Core | FastAPI, PostgreSQL, Redis, workers, audit | `backend/dadip/` |
+| Resilient Communication Engine | Prioritised, retried, deduplicated, tracked delivery | `backend/dadip/comms/` |
+| Edge Intelligence Network | Offline-first edge agent over MQTT | `backend/dadip/edge/` |
+| Disaster Command Centre | Operator dashboard | `frontend/` |
+| Network simulation | Reproducible comparison of delivery strategies | `backend/dadip/simulation/` |
 
-**Raw Data → Verified Intelligence → Risk Assessment → Decision-Admissibility → Operational Action**
----
+## Quick start (local services)
 
-# 🧠 AURA — AI Risk & Anomaly Intelligence
+Requirements: Python 3.12+, PostgreSQL 16, Redis 7, Mosquitto 2 (or Docker Compose).
 
-At the heart of DADIP is **AURA**, an integrated AI intelligence assistant designed to analyze incoming disaster information and provide contextual decision support.
-
-AURA acts as the intelligence layer between incoming data and operational action.
-
-### AURA analyzes:
-
-* Incident information
-* Citizen reports
-* Environmental conditions
-* Historical patterns
-* Operational datasets
-* Risk indicators
-* Potential anomalies
-* Report consistency
-* Incident severity
-* Available contextual evidence
-
-### AURA provides:
-
-* Risk assessment
-* Severity analysis
-* Anomaly detection
-* Report credibility analysis
-* Decision-admissibility assessment
-* Contextual intelligence
-* Incident prioritization
-* Operational recommendations
-* AI-assisted interpretation of incoming information
-
-Rather than treating every incoming report equally, AURA helps identify **which information deserves operational attention and why**.
----
-
-# 🌐 Multi-Modal Disaster Data Pipeline
-
-DADIP is designed to ingest and consolidate information from multiple disaster-related sources.
-
-### Data Sources
-
-* Live citizen incident reports
-* Localized weather information
-* Environmental observations
-* Historical disaster datasets
-* Operational datasets
-* Custom CSV uploads
-* Emergency resource information
-* Help-center information
-
-Incoming information is processed and incorporated into the platform's operational intelligence environment.
-
-This creates a unified view of the disaster situation rather than forcing responders to manually interpret multiple disconnected information sources.
----
-
-# 🏗️ End-to-End System Architecture
-
-```text
-                         ┌──────────────────────┐
-                         │    DISASTER DATA     │
-                         └──────────┬───────────┘
-                                    │
-               ┌────────────────────┼────────────────────┐
-               │                    │                    │
-               ▼                    ▼                    ▼
-        Citizen Reports       Weather Data       CSV / Datasets
-               │                    │                    │
-               └────────────────────┼────────────────────┘
-                                    │
-                                    ▼
-                         ┌──────────────────────┐
-                         │  DATA PROCESSING &    │
-                         │    NORMALIZATION      │
-                         └──────────┬───────────┘
-                                    │
-                                    ▼
-                         ┌──────────────────────┐
-                         │     AURA AI ENGINE   │
-                         │                      │
-                         │  Risk Assessment     │
-                         │  Anomaly Detection   │
-                         │  Credibility        │
-                         │  Admissibility       │
-                         │  Contextual Analysis │
-                         └──────────┬───────────┘
-                                    │
-                                    ▼
-                    ┌──────────────────────────────┐
-                    │   DECISION INTELLIGENCE      │
-                    └──────────────┬───────────────┘
-                                   │
-              ┌────────────────────┼────────────────────┐
-              │                    │                    │
-              ▼                    ▼                    ▼
-       Incident Priority     Resource Status     Geospatial View
-              │                    │                    │
-              └────────────────────┼────────────────────┘
-                                   │
-                                   ▼
-                    ┌──────────────────────────────┐
-                    │      DADIP COMMAND CENTER    │
-                    └──────────────┬───────────────┘
-                                   │
-                         ┌─────────┴─────────┐
-                         ▼                   ▼
-                Resource Deployment   Official Reports
+```bash
+cd backend
+python -m venv .venv && . .venv/bin/activate
+pip install -e ".[dev]"
+cp ../.env.example ../.env          # set DADIP_JWT_SECRET
+alembic upgrade head
+python -m dadip.seed --admin-email you@example.com --demo
+uvicorn dadip.main:app --reload     # API docs: http://localhost:8000/api/docs
+pytest                              # needs the dadip_test database, see docs/development.md
 ```
 
-# 👨‍💻 Developer
+With Docker: `cp .env.example .env && docker compose up --build`.
 
-**Megavarshan A**
+## Repository layout
 
-AI Research Engineer & Developer
-B.Tech Artificial Intelligence
-SRM Institute of Science and Technology
+```
+backend/        FastAPI app, AURA, communication engine, edge agent, simulator, migrations, tests
+frontend/       Next.js command centre (inherited from DADIP, being migrated to the new API)
+legacy/         Original Python agent and Supabase SQL, kept for reference only
+infrastructure/ Broker and deployment configuration
+docs/           Architecture, development, research and the development log
+```
 
----
+## Honesty rules this project follows
 
-# DADIP
+- Demo, simulated, historical and live data are labelled as such in the database (`data_origin`) and the UI.
+- A channel is reported as delivering real messages only when its provider is configured and delivery verified.
+- Every performance number in the docs is produced by a script in this repository, with its seed and config.
 
-### Decision-Admissibility Disaster Intelligence Platform
+## Credits
 
-> **Transforming fragmented disaster information into trusted intelligence, prioritized action, and faster emergency response.**
-
-**Architected & engineered by Megavarshan A.**
+Original DADIP by **Megavarshan A** (B.Tech AI, SRM Institute of Science and Technology).
+Licensed under Apache 2.0.
