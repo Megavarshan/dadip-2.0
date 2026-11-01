@@ -14,10 +14,13 @@ providers or simulated networks. **Planned** = not built yet.
 | AURA reproducible inputs, provenance, sensitivity uncertainty | Implemented | `tests/unit/test_aura_pipeline.py`, `tests/integration/test_aura_api.py` |
 | Report credibility v0 (heuristic) | Implemented, not evaluated | same |
 | Live weather (Open-Meteo) | Implemented, live call not yet verified | mocked HTTP tests |
-| Approval workflow | Planned (Phase 2) | |
-| Communication engine (priority, retry, dedup, TTL) | Planned (Phase 3–4) | |
-| Real channels (Telegram) | Planned, optional | |
-| SMS / WhatsApp | Planned as mock only | |
+| Approval workflow (AURA policy, four-eyes, reject, cancel) | Implemented | `tests/integration/test_comms.py` |
+| Communication engine: priority, retry/backoff, dedup, TTL, outbox, attempts, acks | Implemented | `tests/unit/test_comms_core.py`, `tests/integration/test_comms.py`, end-to-end smoke run |
+| MQTT channel (QoS 1, real Mosquitto) + MQTT acks | Implemented | `test_mqtt_adapter_publishes_qos1_to_real_broker`, smoke run |
+| WebSocket live feed, webhook channel | Implemented | webhook: mocked HTTP tests; WebSocket endpoint not yet exercised by a client test |
+| Multilingual alert headers (en / hi / ta) | Implemented, needs native-speaker review | `test_full_lifecycle_approve_dispatch_ack` |
+| Telegram channel | Implemented, not verified (no bot token configured) | |
+| SMS / WhatsApp | Mock only, labelled `is_mock` in stats | |
 | MQTT edge agent | Planned (Phase 5) | |
 | Network degradation experiments | Planned (Phase 7) | |
 | Command centre on live API | Planned (Phase 6) | |

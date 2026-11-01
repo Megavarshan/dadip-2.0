@@ -2,6 +2,34 @@
 
 Newest entries first. Every "verified" claim names the command that verified it.
 
+## 2026-11-01 — Phases 3–4: communication engine
+
+**Done**
+
+- Pure scheduling core (`dadip/comms/core.py`) with the three research strategies; shared by the live
+  dispatcher and the upcoming simulator.
+- Adapters: mock SMS / WhatsApp, MQTT (QoS 1), WebSocket (Redis), webhook, Telegram.
+- PostgreSQL outbox dispatcher with `SKIP LOCKED`, attempts and lifecycle events; `dadip-dispatcher` worker
+  with an MQTT acknowledgement listener.
+- Alert workflow: AURA-driven approval policy, four-eyes approval, reject, cancel, dedup, TTL, HMAC ack links,
+  English / Hindi / Tamil headers. Endpoints for alerts, messages, delivery stats, channels, live WebSocket.
+
+**Verified**
+
+- `pytest`: 370 passed (17 new communication integration tests against PostgreSQL and Mosquitto).
+- End-to-end run with real processes (uvicorn API, `dadip-dispatcher`, Mosquitto, an MQTT subscriber acting as
+  an edge device): approve → MQTT delivery → device ack recorded in 0.4 s; no errors logged.
+
+**Bug found by the end-to-end run, fixed with a regression test**
+
+- MQTT acks were silently lost when a device answered before the dispatcher committed: the ack `UPDATE` did not
+  match the still-`queued` row, so PostgreSQL skipped it instead of waiting for the lock.
+  Test: `test_ack_arriving_during_send_is_not_lost`.
+
+**Not yet verified**
+
+- Telegram (no bot token), live WebSocket endpoint with a browser client.
+
 ## 2026-11-01 — Phase 2: AURA
 
 **Done**
