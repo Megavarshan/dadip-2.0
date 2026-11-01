@@ -23,6 +23,8 @@ providers or simulated networks. **Planned** = not built yet.
 | SMS / WhatsApp | Mock only, labelled `is_mock` in stats | |
 | Edge agent: SQLite outbox, MQTT QoS 1, offline queue, reconnect, local inference, alert inbox + acks | Implemented | `tests/integration/test_edge.py` (real Mosquitto, outages injected by TCP proxy) |
 | Edge gateway: idempotent ingestion, device status, edge reports scored | Implemented | same |
-| Network degradation experiments | Planned (Phase 7) | |
+| Network degradation experiments (simulated, 630 runs) | Implemented | `simulation-results/v1`, `docs/research/communication-results.md`, `tests/unit/test_simulation.py` |
+| Circuit breaker (channel availability monitoring) in live dispatcher | Implemented | `test_channel_outage_holds_messages_without_burning_retries` |
+| Live fault-injected dispatch experiment (real Mosquitto) | Planned | |
 | Command centre on live API | Planned (Phase 6) | |
 | Docker Compose stack | Written, not yet run | |

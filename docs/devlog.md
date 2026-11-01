@@ -2,6 +2,26 @@
 
 Newest entries first. Every "verified" claim names the command that verified it.
 
+## 2026-11-01 — Phase 7: communication experiments
+
+**Done**
+
+- Discrete-event simulator on the shared comms core; experiment runner with bootstrap CIs and paired
+  differences; figure generator; circuit breaker added to the core and the live dispatcher.
+- Ran 630 runs (7 scenarios × 3 strategies × 30 seeds) in 156 s; results committed in `simulation-results/v1`.
+
+**Results** (simulated; details and caveats in `docs/research/communication-results.md`)
+
+- Resilient: 100% timely delivery in all scenarios; baseline 72.5–99.1%.
+- Under congestion priority scheduling cut red-alert p95 latency from 284.6 s to 0.67 s.
+- Reliability costs tail latency on alerts others drop (red p95 89 s during a 120 s outage).
+
+**Defects found by the experiment**
+
+- Breaker probes exhausted red alerts' retry budget during outages → failures while the channel is down no
+  longer consume budget (simulator and live dispatcher).
+- Float-boundary livelock in breaker probe timing → tolerance and strictly advancing wake-ups.
+
 ## 2026-11-01 — Phase 5: edge intelligence
 
 **Done**
