@@ -307,3 +307,32 @@ def test_ack_arriving_during_send_is_not_lost(client, incident_with_assessment, 
     m = db.scalar(select(Message))
     db.refresh(m)
     assert m.state == "acknowledged" and m.delivered_at is not None
+
+
+def test_channel_outage_holds_messages_without_burning_retries(client, incident_with_assessment, auth_header, db):
+    """Live dispatcher uses the same circuit breaker as the simulator: during an outage messages stay in the
+    outbox with their retry budget intact, and all are delivered after the channel recovers."""
+    inc, h_op = incident_with_assessment
+    h_ap = auth_header("approver")
+    for i in range(5):
+        a = make_alert(client, h_op, inc["id"], channels=["mock_sms"], audience=f"area-{i}").json()
+        client.post(f"/api/v1/alerts/{a['id']}/approve", headers=h_ap)
+    sms = MockAdapter("mock_sms")
+    sms.down = True
+    clock = {"t": datetime.now(UTC)}
+    d = Dispatcher({"mock_sms": sms}, rng=random.Random(3), clock=lambda: clock["t"])
+    with get_sessionmaker()() as s:
+        for _ in range(40):  # 40 rounds x 10 s = a 400 s outage
+            d.run_once(s)
+            clock["t"] += timedelta(seconds=10)
+        db.expire_all()
+        assert d.breakers["mock_sms"].is_open
+        assert all(m.attempts < m.max_attempts for m in db.scalars(select(Message)))
+        assert {m.state for m in db.scalars(select(Message))} <= {"queued", "retry_scheduled"}
+        sms.down = False
+        for _ in range(20):
+            d.run_once(s)
+            clock["t"] += timedelta(seconds=10)
+    db.expire_all()
+    assert {m.state for m in db.scalars(select(Message))} == {"delivered"}
+    assert len(sms.sent) == 5

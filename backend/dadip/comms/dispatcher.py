@@ -14,7 +14,16 @@ from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from dadip.comms.adapters import Adapter, OutboundMessage
-from dadip.comms.core import RESILIENT, Envelope, Outcome, State, StrategyConfig, after_attempt
+from dadip.comms.core import (
+    RESILIENT,
+    CircuitBreaker,
+    Envelope,
+    Outcome,
+    State,
+    StrategyConfig,
+    after_attempt,
+    refund_attempt,
+)
 from dadip.db.models import ChannelConfig, DeliveryAttempt, Message, MessageEvent
 
 log = logging.getLogger(__name__)
@@ -32,6 +41,8 @@ class Dispatcher:
         self.rng = rng or random.Random()  # noqa: S311 - jitter, not security
         self.publish = publish  # optional callable(dict) for live updates
         self.clock = clock
+        # One availability monitor per channel, as in the simulator (only for strategies that persist).
+        self.breakers = {c: CircuitBreaker() for c in adapters} if cfg.persist_on_outage else {}
 
     def expire_overdue(self, db: Session) -> int:
         now = self.clock()
@@ -53,7 +64,11 @@ class Dispatcher:
         self.expire_overdue(db)
         now = self.clock()
         disabled = self._disabled_channels(db)
+        now_s = now.timestamp()
         available = [c for c in self.adapters if c not in disabled]
+        # A channel whose breaker is open gets one probe message per probe interval; the rest stay queued.
+        probing = {c for c in available if c in self.breakers and self.breakers[c].is_open}
+        available = [c for c in available if c not in probing or self.breakers[c].allow(now_s)]
         if not available:
             return 0
         claimed = db.scalars(
@@ -64,10 +79,17 @@ class Dispatcher:
             .limit(batch)
             .with_for_update(skip_locked=True)
         ).all()
+        attempted = 0
+        probes_sent: set[str] = set()
         for m in claimed:
+            if m.channel in probing:
+                if m.channel in probes_sent:
+                    continue  # one probe per open channel per round; the row lock is released at commit
+                probes_sent.add(m.channel)
             self._attempt(db, m)
+            attempted += 1
         db.commit()
-        return len(claimed)
+        return attempted
 
     def _attempt(self, db: Session, m: Message) -> None:
         adapter = self.adapters[m.channel]
@@ -83,20 +105,29 @@ class Dispatcher:
             log.exception("adapter raised", extra={"channel": m.channel, "message_id": str(m.id)})
             outcome, error, pid, latency = Outcome.transient_error, f"adapter exception: {type(e).__name__}", None, 0.0
         finished = self.clock()
-        db.add(DeliveryAttempt(message_id=m.id, attempt_no=m.attempts, channel=m.channel, started_at=started,
+        # m.attempts is the retry budget used (refunded during outages); attempt_no numbers physical attempts.
+        attempt_no = (db.scalar(select(func.count()).select_from(DeliveryAttempt)
+                                .where(DeliveryAttempt.message_id == m.id)) or 0) + 1
+        db.add(DeliveryAttempt(message_id=m.id, attempt_no=attempt_no, channel=m.channel, started_at=started,
                                finished_at=finished, latency_ms=latency, outcome=outcome.value,
                                provider_message_id=pid, error=error))
         env = Envelope(id=str(m.id), priority=m.priority, created_at=m.created_at, expires_at=m.expires_at,
                        idempotency_key=m.idempotency_key, state=State.dispatching, attempts=m.attempts)
-        t = after_attempt(env, outcome, finished, self.cfg, self.rng, m.max_attempts)
+        breaker = self.breakers.get(m.channel)
+        if breaker is not None:
+            breaker.record(outcome == Outcome.success, finished.timestamp())
+        down = breaker is not None and breaker.is_open
+        t = after_attempt(env, outcome, finished, self.cfg, self.rng, m.max_attempts, channel_down=down)
+        if refund_attempt(t):
+            m.attempts -= 1  # the delivery_attempts row still records the physical attempt
         m.state = t.state
         m.last_error = error
         if t.next_attempt_at:
             m.next_attempt_at = t.next_attempt_at
         if t.state == State.delivered:
             m.delivered_at = finished
-        record_event(db, m, t.state, {"attempt": m.attempts, "outcome": outcome.value, "reason": t.reason,
-                                      "provider_message_id": pid})
+        record_event(db, m, t.state, {"attempt": attempt_no, "budget_used": m.attempts, "outcome": outcome.value,
+                                      "reason": t.reason, "provider_message_id": pid})
         if self.publish:
             self.publish({"type": "message_state", "message_id": str(m.id), "state": t.state.value,
                           "channel": m.channel, "attempt": m.attempts})
