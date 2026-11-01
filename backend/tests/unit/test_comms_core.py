@@ -93,3 +93,40 @@ def test_outage_handling():
 def test_idempotency_key_stable():
     assert idempotency_key("alert", "sms", "+91") == idempotency_key("alert", "sms", "+91")
     assert idempotency_key("alert", "sms", "+91") != idempotency_key("alert", "sms", "+92")
+
+
+def test_circuit_breaker_opens_probes_and_closes():
+    from dadip.comms.core import CircuitBreaker
+
+    cb = CircuitBreaker(threshold=3, probe_interval_s=5)
+    for t in range(3):
+        assert cb.allow(t)
+        cb.record(False, t)
+    assert cb.is_open
+    assert not cb.allow(3) and not cb.allow(6.9)
+    assert cb.allow(7.1)          # one probe after the interval
+    assert not cb.allow(7.2)
+    cb.record(True, 7.5)
+    assert not cb.is_open and cb.allow(7.6)
+
+
+def test_failures_while_channel_down_do_not_consume_retry_budget():
+    from dadip.comms.core import refund_attempt
+
+    e = env("red", 90, attempts=RESILIENT.retry_policy.max_attempts)
+    t = after_attempt(e, Outcome.timeout, T0, RESILIENT, random.Random(0), channel_down=True)
+    assert t.state == State.queued and refund_attempt(t)
+    # without persistence (baseline) a down channel still loses the message
+    assert after_attempt(e, Outcome.timeout, T0, BASELINE, random.Random(0), channel_down=True).state == State.failed
+    # TTL still wins
+    late = env("old", 90, ttl_s=1)
+    assert after_attempt(late, Outcome.timeout, T0 + timedelta(seconds=2), RESILIENT, random.Random(0),
+                         channel_down=True).state == State.expired
+
+
+def test_circuit_breaker_allows_probe_at_exact_float_boundary():
+    from dadip.comms.core import CircuitBreaker
+
+    cb = CircuitBreaker(threshold=1, probe_interval_s=5.0)
+    cb.record(False, 208.35826771)   # opens, last_probe = that time
+    assert cb.allow(208.35826771 + 5.0)

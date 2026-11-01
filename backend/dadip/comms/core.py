@@ -131,10 +131,20 @@ class Transition:
 
 
 def after_attempt(e: Envelope, outcome: Outcome, now: datetime, cfg: StrategyConfig, rng: random.Random,
-                  max_attempts: int | None = None) -> Transition:
-    """Decide what happens to a message after one delivery attempt (attempt count already incremented)."""
+                  max_attempts: int | None = None, channel_down: bool = False) -> Transition:
+    """Decide what happens to a message after one delivery attempt (attempt count already incremented).
+
+    `channel_down`: the availability monitor (circuit breaker) considers the channel down. With a strategy that
+    persists on outage, such a failure says nothing about the message, so it returns to the outbox and its retry
+    budget is refunded by the caller (`refund_attempt`). Without this, the breaker's probes, which always use the
+    highest-priority message, exhausted the retry budget of red alerts during long outages (found in the
+    `outage` experiment)."""
     if outcome == Outcome.success:
         return Transition(State.delivered, None, "delivered")
+    if channel_down and cfg.persist_on_outage and outcome != Outcome.permanent_error:
+        if cfg.enforce_ttl and now >= e.expires_at:
+            return Transition(State.expired, None, "expired while the channel was down")
+        return Transition(State.queued, now, "channel down; held in outbox, retry budget not consumed")
     limit = max_attempts or cfg.retry_policy.max_attempts
     if outcome == Outcome.permanent_error:
         return Transition(State.failed, None, "permanent error")
@@ -148,8 +158,49 @@ def after_attempt(e: Envelope, outcome: Outcome, now: datetime, cfg: StrategyCon
     return Transition(State.retry_scheduled, when, f"{outcome.value}; retry {e.attempts + 1} scheduled")
 
 
+def refund_attempt(t: Transition) -> bool:
+    """True when the attempt that led to `t` must not count against the message's retry budget."""
+    return t.state == State.queued
+
+
 def on_channel_outage(e: Envelope, now: datetime, cfg: StrategyConfig) -> Transition:
     """The channel is known to be down before an attempt is made."""
     if cfg.persist_on_outage:
         return Transition(State.queued, now, "held in outbox until the channel recovers")
     return Transition(State.failed, None, "channel down; message dropped")
+
+
+@dataclass
+class CircuitBreaker:
+    """Channel availability monitor. After `threshold` consecutive transient failures the channel is treated as
+    down: messages stay queued (no attempts burn their retry budget) and one probe is allowed every
+    `probe_interval_s`. A successful attempt closes the breaker."""
+
+    threshold: int = 3
+    probe_interval_s: float = 5.0
+    consecutive_failures: int = 0
+    open_since: float | None = None
+    last_probe: float | None = None
+
+    def allow(self, now_s: float) -> bool:
+        if self.open_since is None:
+            return True
+        # Tolerance: last_probe + interval - last_probe can be 4.999999999 in floating point; without it a caller
+        # that wakes exactly at last_probe + interval is refused forever (found by the simulator hanging).
+        if self.last_probe is None or now_s - self.last_probe >= self.probe_interval_s - 1e-9:
+            self.last_probe = now_s
+            return True
+        return False
+
+    def record(self, success: bool, now_s: float) -> None:
+        if success:
+            self.consecutive_failures, self.open_since, self.last_probe = 0, None, None
+            return
+        self.consecutive_failures += 1
+        if self.consecutive_failures >= self.threshold and self.open_since is None:
+            self.open_since = now_s
+            self.last_probe = now_s
+
+    @property
+    def is_open(self) -> bool:
+        return self.open_since is not None
