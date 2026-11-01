@@ -8,6 +8,7 @@ from dadip.api.deps import DbSession, Operator, client_ip, get_current_user_opti
 from dadip.api.schemas import Page, ReportIn, ReportOut, ReportPatch, ReportPublicOut, ReportStatus
 from dadip.db.models import Incident, IncidentReport, User
 from dadip.services import audit
+from dadip.services.intelligence import score_report
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -25,6 +26,7 @@ def submit_report(
     report = IncidentReport(**body.model_dump(), reporter_user_id=user.id if user else None, source="web")
     db.add(report)
     db.flush()
+    score_report(db, report)
     audit.record(db, "SUBMIT_REPORT", actor_id=user.id if user else None, resource_type="report",
                  resource_id=report.id, details={"hazard": report.hazard_type}, ip_address=client_ip(request))
     db.commit()

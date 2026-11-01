@@ -97,6 +97,24 @@ class IncidentOut(ORM):
     updated_at: datetime
 
 
+class AssessmentOut(ORM):
+    id: uuid.UUID
+    incident_id: uuid.UUID
+    model_version: str
+    inputs: dict
+    input_provenance: dict
+    risk: dict
+    reliability: dict
+    distribution_shift: dict
+    admissibility: dict
+    explanation: dict
+    uncertainty: dict
+    composite_risk: int
+    admissibility_score: float
+    decision: Literal["execute", "defer", "abstain"]
+    created_at: datetime
+
+
 # ---- reports ----
 class ReportIn(BaseModel):
     reporter_name: str = Field(min_length=1, max_length=200)

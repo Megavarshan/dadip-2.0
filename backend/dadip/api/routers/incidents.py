@@ -1,13 +1,20 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 
 from dadip.api.deps import DbSession, Operator
-from dadip.api.schemas import IncidentIn, IncidentOut, IncidentPatch, IncidentStatus, Page, Severity
-from dadip.db.models import Incident
+from dadip.api.schemas import AssessmentOut, IncidentIn, IncidentOut, IncidentPatch, IncidentStatus, Page, Severity
+from dadip.aura import weather
+from dadip.db.models import AuraAssessment, Incident
 from dadip.services import audit
+from dadip.services.intelligence import assess_incident
+
+
+def get_weather_fetcher():
+    """Overridable in tests; live Open-Meteo in production."""
+    return weather.fetch_current
 
 router = APIRouter(prefix="/incidents", tags=["incidents"])
 
@@ -65,3 +72,31 @@ def update_incident(incident_id: uuid.UUID, body: IncidentPatch, db: DbSession, 
                  details=changes)
     db.commit()
     return inc
+
+
+@router.post("/{incident_id}/assess", response_model=AssessmentOut, status_code=status.HTTP_201_CREATED)
+def assess(
+    incident_id: uuid.UUID,
+    db: DbSession,
+    user: Operator,
+    fetcher: Annotated[object, Depends(get_weather_fetcher)],
+    live_weather: bool = True,
+) -> AuraAssessment:
+    """Run AURA on the incident. With `live_weather`, current conditions at the incident location come from
+    Open-Meteo; if unavailable the inputs are marked `default` and the assessment says so."""
+    inc = db.get(Incident, incident_id)
+    if not inc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Incident not found")
+    row = assess_incident(db, inc, user.id, fetcher if live_weather else None)
+    audit.record(db, "AURA_ASSESS", actor_id=user.id, resource_type="incident", resource_id=inc.id,
+                 details={"assessment_id": str(row.id), "decision": row.decision, "risk": row.composite_risk})
+    db.commit()
+    return row
+
+
+@router.get("/{incident_id}/assessments", response_model=list[AssessmentOut])
+def list_assessments(incident_id: uuid.UUID, db: DbSession, _: Operator,
+                     limit: Annotated[int, Query(ge=1, le=50)] = 10) -> list[AuraAssessment]:
+    q = (select(AuraAssessment).where(AuraAssessment.incident_id == incident_id)
+         .order_by(AuraAssessment.created_at.desc()).limit(limit))
+    return list(db.scalars(q).all())

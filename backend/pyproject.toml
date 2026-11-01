@@ -54,4 +54,5 @@ ignore = ["S101", "B008"]
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S", "B"]
 "dadip/simulation/*" = ["S311"]
+"dadip/aura/pipeline.py" = ["S311"]  # seeded RNG for reproducible sensitivity analysis, not security
 "migrations/versions/*" = ["E501"]

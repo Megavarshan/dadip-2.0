@@ -2,6 +2,31 @@
 
 Newest entries first. Every "verified" claim names the command that verified it.
 
+## 2026-11-01 — Phase 2: AURA
+
+**Done**
+
+- Ported the five AURA engines to Python (`dadip/aura/engines.py`), behaviour-identical to the original.
+- Parity harness: Node runs the original TypeScript on seeded inputs; fixture in `tests/fixtures/`.
+- AURA 2.0 pipeline: deterministic inputs with provenance, sensitivity-based uncertainty, corrected OOD test,
+  approval policy. Credibility v0 for reports. Open-Meteo client at the incident location.
+- API: `POST /incidents/{id}/assess`, `GET /incidents/{id}/assessments`; reports scored on submit.
+
+**Verified**
+
+- `pytest`: 341 passed (incl. 304 pipeline + 441 admissibility-grid parity cases against the original).
+
+**Findings** (details in `docs/research/aura.md`)
+
+- The original admissibility score never exceeds 0.48 from real inputs (global optimisation), so `execute`
+  (≥ 0.55) is unreachable; every alert therefore goes to a human approver.
+- The original OOD threshold (16.92) is χ²₉ on the squared scale but is compared with the unsquared distance.
+- Port bug caught by parity tests: `floor(x + 0.5)` differs from JavaScript `Math.round` at 0.49999999999999994.
+
+**Not yet verified**
+
+- A live Open-Meteo request (blocked from the sandbox).
+
 ## 2026-11-01 — Phase 1: foundation
 
 **Done**
