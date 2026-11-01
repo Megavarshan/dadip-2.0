@@ -14,6 +14,8 @@ Disaster intelligence that keeps critical alerts moving when networks degrade.
 ![MQTT](https://img.shields.io/badge/MQTT-Mosquitto-660066?logo=eclipsemosquitto&logoColor=white)
 ![License](https://img.shields.io/badge/License-Apache_2.0-blue)
 
+**[Why](#why-dadip-20) · [Architecture](#architecture) · [Screenshots](#screenshots) · [Results](#results) · [Getting started](#getting-started) · [Docs](#documentation)**
+
 <img src="docs/images/overview.png" alt="DADIP 2.0 command centre overview" width="900">
 
 </div>
@@ -128,6 +130,13 @@ cellular or radio network. Resilient delivery has a cost: alerts that other stra
 
 Python 3.12+, Node.js 22+, PostgreSQL 16, Redis 7 and Mosquitto 2, or Docker Compose for the services.
 
+All configuration comes from environment variables; copy [`.env.example`](.env.example) to `.env` and fill in the
+blanks. No credentials are stored in the repository. Optional services (Telegram, webhook, weather) stay disabled
+until configured.
+
+> Using Docker instead? `docker compose up -d postgres redis mosquitto` starts the three services; then continue
+> with step 1.
+
 ### 1. Backend
 
 ```bash
@@ -203,6 +212,7 @@ Redis and Mosquitto. CI runs the same checks on every push.
 
 | Document | Contents |
 | --- | --- |
+| [Project report (Word)](docs/DADIP-2.0-Project-Report.docx) | Full technical report: problem, design, methodology, results, findings, limitations |
 | [Communication results](docs/research/communication-results.md) | Experiment design, results, limitations |
 | [AURA](docs/research/aura.md) | What the AI engine is, parity verification, findings |
 | [Communication engine](docs/architecture/communication.md) | Alert lifecycle and the guarantees, each with its test |
