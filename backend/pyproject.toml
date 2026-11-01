@@ -27,18 +27,21 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.5"]
+dev = ["pytest>=8", "pytest-cov>=5", "pytest-timeout>=2.3", "ruff>=0.5"]
 
 [project.scripts]
 dadip-edge = "dadip.edge.agent:main"
 dadip-sim = "dadip.simulation.experiments:main"
 dadip-dispatcher = "dadip.comms.worker:main"
+dadip-edge-gateway = "dadip.edge.gateway:main"
 
 [tool.setuptools.packages.find]
 include = ["dadip*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+timeout = 60
+timeout_method = "thread"  # thread method dumps every stack on a hang (paho callbacks block signal-based timeouts)
 markers = [
   "integration: needs real PostgreSQL / Redis / Mosquitto (see docs/development.md)",
 ]

@@ -21,7 +21,8 @@ providers or simulated networks. **Planned** = not built yet.
 | Multilingual alert headers (en / hi / ta) | Implemented, needs native-speaker review | `test_full_lifecycle_approve_dispatch_ack` |
 | Telegram channel | Implemented, not verified (no bot token configured) | |
 | SMS / WhatsApp | Mock only, labelled `is_mock` in stats | |
-| MQTT edge agent | Planned (Phase 5) | |
+| Edge agent: SQLite outbox, MQTT QoS 1, offline queue, reconnect, local inference, alert inbox + acks | Implemented | `tests/integration/test_edge.py` (real Mosquitto, outages injected by TCP proxy) |
+| Edge gateway: idempotent ingestion, device status, edge reports scored | Implemented | same |
 | Network degradation experiments | Planned (Phase 7) | |
 | Command centre on live API | Planned (Phase 6) | |
 | Docker Compose stack | Written, not yet run | |

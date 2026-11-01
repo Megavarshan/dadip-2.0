@@ -2,6 +2,32 @@
 
 Newest entries first. Every "verified" claim names the command that verified it.
 
+## 2026-11-01 — Phase 5: edge intelligence
+
+**Done**
+
+- Edge agent (`dadip-edge`): SQLite outbox and alert inbox, MQTT QoS 1 upload marked synced on PUBACK,
+  last-will offline status, automatic reconnection, local AURA risk inference that raises a local alarm offline,
+  alert reception with deduplicated inbox and MQTT acks.
+- Edge gateway (`dadip-edge-gateway`): idempotent ingestion by device event id, device status, edge reports
+  turned into scored incident reports. API: `/edge/devices`, `/edge/events`.
+- `FaultProxy`: TCP proxy that takes a real MQTT link down and up for outage tests.
+
+**Verified**
+
+- `pytest tests/integration/test_edge.py`: 6 passed, 5 consecutive runs. 25 events queued during an outage arrive
+  exactly once after restoration; a 500-event backlog drains after reconnect; re-sent events are dropped by the
+  cloud; redelivered alerts are stored once and acked each time.
+- Full suite: 376 passed.
+
+**Bug found and fixed**
+
+- Lock-order deadlock in the edge agent: the flusher held the agent lock while calling paho `publish`, and paho
+  held its internal lock while calling `on_publish`, which needed the agent lock. It froze the agent on the first
+  burst flush after a reconnect. Found by the outage test, diagnosed with a `py-spy` stack dump, fixed by never
+  calling paho under the agent lock. Regression: `test_large_backlog_after_outage_does_not_deadlock`.
+- Added `pytest-timeout` (thread method) so a hang fails with stack traces instead of stalling CI.
+
 ## 2026-11-01 — Phases 3–4: communication engine
 
 **Done**

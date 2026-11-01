@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from dadip import __version__
-from dadip.api.routers import alerts, auth, incidents, messages, misc, reports
+from dadip.api.routers import alerts, auth, edge, incidents, messages, misc, reports
 from dadip.core.config import get_settings
 from dadip.core.logging import configure_logging
 
@@ -49,7 +49,8 @@ def create_app() -> FastAPI:
                                    "ms": round((time.perf_counter() - start) * 1000, 1)})
         return response
 
-    for r in (misc.router, auth.router, incidents.router, reports.router, alerts.router, messages.router):
+    for r in (misc.router, auth.router, incidents.router, reports.router, alerts.router, messages.router,
+              edge.router):
         app.include_router(r, prefix="/api/v1")
     return app
 
