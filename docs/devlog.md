@@ -2,6 +2,14 @@
 
 Newest entries first. Every "verified" claim names the command that verified it.
 
+## 2026-11-01 — Repository presentation
+
+- README rewritten with architecture diagram, alert sequence, screenshots, results and setup guide.
+- Offline map base layer: maps stay readable when the tile server is unreachable.
+- Fixed test isolation: edge tests left retained MQTT status messages on the shared broker, which made a local
+  gateway list test devices; tests now clear them and the gateway ignores empty retained payloads.
+- Removed the original demo credentials from `legacy/supabase/seed.sql`.
+
 ## 2026-11-01 — Phase 6: command centre
 
 **Done**

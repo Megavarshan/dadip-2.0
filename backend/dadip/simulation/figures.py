@@ -49,6 +49,7 @@ def main(results_dir: str) -> None:
     ax.legend(frameon=False, fontsize=8, ncol=3, loc="lower right", bbox_to_anchor=(1, 1))
     fig.tight_layout()
     fig.savefig(out / "fig_red_delivery.svg")
+    fig.savefig(out / "fig_red_delivery.png", dpi=200)
 
     fig, ax = plt.subplots(figsize=(8, 3.6))
     _bars(ax, summary, "red_latency_p95_s", "seconds (log scale)",
@@ -56,6 +57,7 @@ def main(results_dir: str) -> None:
     ax.legend(frameon=False, fontsize=8, ncol=3, loc="lower right", bbox_to_anchor=(1, 1))
     fig.tight_layout()
     fig.savefig(out / "fig_red_latency.svg")
+    fig.savefig(out / "fig_red_latency.png", dpi=200)
 
     fig, ax = plt.subplots(figsize=(8, 3.6))
     _bars(ax, summary, "attempts_per_delivered", "attempts / delivered alert",
@@ -64,6 +66,7 @@ def main(results_dir: str) -> None:
     ax.legend(frameon=False, fontsize=8, ncol=3, loc="lower right", bbox_to_anchor=(1, 1))
     fig.tight_layout()
     fig.savefig(out / "fig_attempts.svg")
+    fig.savefig(out / "fig_attempts.png", dpi=200)
     print(f"figures written to {out}")
 
 

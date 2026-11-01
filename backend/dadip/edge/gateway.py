@@ -89,6 +89,8 @@ class Gateway:
 
     def _on_message(self, c, userdata, m):
         parts = m.topic.split("/")
+        if not m.payload:
+            return  # an empty retained message only clears the broker's copy
         try:
             body = json.loads(m.payload)
             with get_sessionmaker()() as db:

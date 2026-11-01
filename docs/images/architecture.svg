@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#38bdf8"/></marker>
+  </defs>
+  <rect width="1200" height="700" rx="18" fill="#070d1b"/>
+  <text x="40" y="52" fill="#f1f5f9" font-size="24" font-weight="600">DADIP 2.0 architecture</text>
+  <text x="40" y="78" fill="#94a3b8" font-size="14">Every alert passes AURA and a human approver before the communication engine sends it</text>
+
+  <!-- inputs -->
+  <g font-size="14">
+    <rect x="40" y="110" width="260" height="64" rx="10" fill="#0b1426" stroke="#334155"/>
+    <text x="60" y="137" fill="#e2e8f0" font-weight="600">Citizens</text><text x="60" y="158" fill="#94a3b8" font-size="12.5">Public portal · 5 languages</text>
+    <rect x="320" y="110" width="260" height="64" rx="10" fill="#0b1426" stroke="#334155"/>
+    <text x="340" y="137" fill="#e2e8f0" font-weight="600">Operators &amp; approvers</text><text x="340" y="158" fill="#94a3b8" font-size="12.5">Command centre · 4 roles</text>
+    <rect x="600" y="110" width="260" height="64" rx="10" fill="#0b1426" stroke="#334155"/>
+    <text x="620" y="137" fill="#e2e8f0" font-weight="600">Edge devices</text><text x="620" y="158" fill="#94a3b8" font-size="12.5">Offline-first · SQLite outbox</text>
+    <rect x="880" y="110" width="280" height="64" rx="10" fill="#0b1426" stroke="#334155"/>
+    <text x="900" y="137" fill="#e2e8f0" font-weight="600">Live feeds</text><text x="900" y="158" fill="#94a3b8" font-size="12.5">Weather at the incident location</text>
+  </g>
+
+  <!-- web tier -->
+  <rect x="40" y="214" width="540" height="70" rx="10" fill="#0b1426" stroke="#334155"/>
+  <text x="60" y="243" fill="#e2e8f0" font-size="15" font-weight="600">Next.js web app</text>
+  <text x="60" y="266" fill="#94a3b8" font-size="12.5">Session in httpOnly cookie · backend-for-frontend proxy · offline basemap</text>
+  <rect x="620" y="214" width="540" height="70" rx="10" fill="#0b1426" stroke="#334155"/>
+  <text x="640" y="243" fill="#e2e8f0" font-size="15" font-weight="600">FastAPI cloud core</text>
+  <text x="640" y="266" fill="#94a3b8" font-size="12.5">JWT + RBAC · validation · rate limits · audit row for every change</text>
+  <path d="M580 249H618" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <path d="M170 174V212" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <path d="M450 174V212" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <path d="M730 174V212" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <text x="738" y="198" fill="#64748b" font-size="11.5">MQTT via gateway</text>
+  <path d="M1020 174V212" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+
+  <!-- core pipeline -->
+  <g>
+    <rect x="40" y="330" width="340" height="120" rx="12" fill="#0b1426" stroke="#334155"/>
+    <text x="60" y="360" fill="#e2e8f0" font-size="16" font-weight="600">AURA intelligence</text>
+    <text x="60" y="384" fill="#94a3b8" font-size="12.5">Risk · reliability r(x) · distribution shift</text>
+    <text x="60" y="403" fill="#94a3b8" font-size="12.5">Admissibility A(x) = r(x) · (1 − D(x))</text>
+    <text x="60" y="422" fill="#94a3b8" font-size="12.5">Input provenance · sensitivity uncertainty</text>
+    <text x="60" y="441" fill="#94a3b8" font-size="12.5">Report credibility (corroboration)</text>
+
+    <rect x="430" y="330" width="320" height="120" rx="12" fill="#0b1426" stroke="#334155"/>
+    <text x="450" y="360" fill="#e2e8f0" font-size="16" font-weight="600">Approval gate</text>
+    <text x="450" y="384" fill="#94a3b8" font-size="12.5">AURA decision + alert level → policy</text>
+    <text x="450" y="403" fill="#94a3b8" font-size="12.5">Four-eyes: creator cannot approve</text>
+    <text x="450" y="422" fill="#94a3b8" font-size="12.5">Reject with reason · cancel unsent</text>
+    <text x="450" y="441" fill="#94a3b8" font-size="12.5">Nothing is sent before approval</text>
+
+    <rect x="800" y="330" width="360" height="120" rx="12" fill="#0c2236" stroke="#38bdf8" stroke-width="2"/>
+    <text x="820" y="360" fill="#e2e8f0" font-size="16" font-weight="600">Resilient communication engine</text>
+    <text x="820" y="384" fill="#bae6fd" font-size="12.5">Severity scheduling · PostgreSQL outbox</text>
+    <text x="820" y="403" fill="#bae6fd" font-size="12.5">Retry with jittered backoff · circuit breaker</text>
+    <text x="820" y="422" fill="#bae6fd" font-size="12.5">Deduplication · TTL · attempts &amp; acks</text>
+    <text x="820" y="441" fill="#bae6fd" font-size="12.5">Same core runs in the simulator</text>
+  </g>
+  <path d="M890 284V328" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <path d="M380 390H428" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <path d="M750 390H798" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <path d="M700 284V300H210V328" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+
+  <!-- channels -->
+  <text x="800" y="488" fill="#94a3b8" font-size="12.5">Channels</text>
+  <g font-size="12.5">
+    <rect x="800" y="498" width="112" height="32" rx="8" fill="#1e1b3a" stroke="#6d5bd0"/><text x="856" y="519" fill="#c4b5fd" text-anchor="middle">SMS (mock)</text>
+    <rect x="924" y="498" width="112" height="32" rx="8" fill="#1e1b3a" stroke="#6d5bd0"/><text x="980" y="519" fill="#c4b5fd" text-anchor="middle" font-size="11.5">WhatsApp (mock)</text>
+    <rect x="1048" y="498" width="112" height="32" rx="8" fill="#0c2236" stroke="#38bdf8"/><text x="1104" y="519" fill="#bae6fd" text-anchor="middle">MQTT QoS 1</text>
+    <rect x="800" y="538" width="112" height="32" rx="8" fill="#0c2236" stroke="#38bdf8"/><text x="856" y="559" fill="#bae6fd" text-anchor="middle">WebSocket</text>
+    <rect x="924" y="538" width="112" height="32" rx="8" fill="#0b1426" stroke="#334155"/><text x="980" y="559" fill="#94a3b8" text-anchor="middle">Webhook*</text>
+    <rect x="1048" y="538" width="112" height="32" rx="8" fill="#0b1426" stroke="#334155"/><text x="1104" y="559" fill="#94a3b8" text-anchor="middle">Telegram*</text>
+  </g>
+  <path d="M980 450V496" stroke="#38bdf8" stroke-width="1.5" fill="none" marker-end="url(#b)"/>
+  <text x="800" y="590" fill="#64748b" font-size="11.5">* enabled when credentials are configured</text>
+
+  <!-- infra -->
+  <rect x="40" y="490" width="710" height="160" rx="12" fill="#0a1222" stroke="#1e293b"/>
+  <text x="60" y="518" fill="#94a3b8" font-size="13" font-weight="600">Shared infrastructure (Docker Compose for local development)</text>
+  <g font-size="13">
+    <rect x="60" y="534" width="150" height="96" rx="10" fill="#0b1426" stroke="#334155"/>
+    <text x="78" y="562" fill="#e2e8f0" font-weight="600">PostgreSQL</text><text x="78" y="584" fill="#94a3b8" font-size="12">Source of truth</text><text x="78" y="602" fill="#94a3b8" font-size="12">Alembic migrations</text>
+    <rect x="224" y="534" width="150" height="96" rx="10" fill="#0b1426" stroke="#334155"/>
+    <text x="242" y="562" fill="#e2e8f0" font-weight="600">Redis</text><text x="242" y="584" fill="#94a3b8" font-size="12">Rate limits</text><text x="242" y="602" fill="#94a3b8" font-size="12">Live-update bus</text>
+    <rect x="388" y="534" width="150" height="96" rx="10" fill="#0b1426" stroke="#334155"/>
+    <text x="406" y="562" fill="#e2e8f0" font-weight="600">Mosquitto</text><text x="406" y="584" fill="#94a3b8" font-size="12">MQTT broker</text><text x="406" y="602" fill="#94a3b8" font-size="12">Last-will status</text>
+    <rect x="552" y="534" width="178" height="96" rx="10" fill="#0b1426" stroke="#334155"/>
+    <text x="570" y="562" fill="#e2e8f0" font-weight="600">Workers</text><text x="570" y="584" fill="#94a3b8" font-size="12">Dispatcher (SKIP LOCKED)</text><text x="570" y="602" fill="#94a3b8" font-size="12">Edge gateway</text>
+  </g>
+</svg>

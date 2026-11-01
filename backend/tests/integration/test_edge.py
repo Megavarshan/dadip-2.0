@@ -51,6 +51,18 @@ def agent(tmp_path, proxy):
     assert a.connected.wait(5)
     yield a
     a.stop()
+    clear_retained(a.device_id)
+
+
+def clear_retained(device_id: str) -> None:
+    """Tests share the broker with any local dev stack: remove this device's retained status (an empty retained
+    payload deletes it), or other gateways would keep seeing test devices."""
+    c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=f"cleanup-{uuid.uuid4().hex[:6]}")
+    c.connect("localhost", 1883)
+    c.loop_start()
+    c.publish(f"dadip/edge/{device_id}/status", b"", qos=1, retain=True).wait_for_publish(3)
+    c.loop_stop()
+    c.disconnect()
 
 
 REPORT = {"hazard_type": "flood", "description": "Water over the road near the school, 1 m deep",

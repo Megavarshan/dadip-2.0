@@ -29,6 +29,7 @@ providers or simulated networks. **Planned** = not built yet.
 | Command centre on live API: overview, incidents + AURA, alerts + approvals, communication, edge, audit, experiments | Implemented | Playwright walkthrough in Chrome (citizen report → AURA → alert → approval → MQTT delivery → edge ack); `next build` |
 | Public portal: map, help centres, rate-limited reports, 5-language UI (from original) | Implemented | same walkthrough (Tamil UI) |
 | Session in httpOnly cookie via backend-for-frontend proxy | Implemented | walkthrough; `test_client_ip_*` |
+| Offline map base layer (bundled Natural Earth outlines) | Implemented | screenshots with the tile server unreachable |
 | Live updates in the UI | Polling every 5 s (WebSocket endpoint exists, not used by the UI yet) | |
 | Deployment (frontend, backend, workers, broker) | Planned (Phase 9) | |
 | Docker Compose stack | Written, not yet run | |

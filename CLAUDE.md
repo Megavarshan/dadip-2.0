@@ -1,7 +1,7 @@
 # Working rules for this repository
 
 - `Megavarshan/disaster-ai` is the frozen baseline. Never push to it.
-- Commit as `Megavarshan <ma8711@srmist.edu.in>`; no co-author trailers.
+- Commit under the repository owner's own identity; no co-author trailers.
 - Never claim a feature works until a test or command shows it; record that command in `docs/devlog.md`.
 - Never fabricate metrics. Every number in docs comes from a script in `backend/dadip/simulation` or a test.
 - Label data provenance (`data_origin`: live, report, manual, demo, simulated) and mock channels everywhere.

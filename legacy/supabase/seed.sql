@@ -4,13 +4,8 @@
 -- ============================================================
 
 -- ==================== USERS ====================
--- Default passwords use bcrypt hash of the plaintext.
--- admin@dadip.in / admin123  |  officer@ndma.gov.in / ndma@2026  |  citizen@example.com / citizen123
-INSERT INTO users (email, name, password_hash, role, department, phone, language) VALUES
-  ('admin@dadip.in', 'DADIP Admin', '$2b$10$rICGdGqqGfvlCOBMEiKGqeWV5f8RyZwHZJNJ0svW5k5V9KZI7xw8a', 'admin', 'System Administration', '+91-1100000000', 'en'),
-  ('officer@ndma.gov.in', 'NDMA Emergency Officer', '$2b$10$rICGdGqqGfvlCOBMEiKGqeWV5f8RyZwHZJNJ0svW5k5V9KZI7xw8a', 'government', 'National Disaster Management Authority', '+91-011-24363260', 'en'),
-  ('citizen@example.com', 'Ramesh Kumar', '$2b$10$rICGdGqqGfvlCOBMEiKGqeWV5f8RyZwHZJNJ0svW5k5V9KZI7xw8a', 'public', NULL, '+91-9876543210', 'hi')
-ON CONFLICT (email) DO NOTHING;
+-- Removed in DADIP 2.0: the original demo accounts and password hashes are not carried over.
+-- DADIP 2.0 creates accounts with `python -m dadip.seed --admin-email ...` (password generated or read from env).
 
 -- ==================== DISASTER EVENTS ====================
 INSERT INTO disaster_events (type, title, description, severity, latitude, longitude, source, status, state, magnitude, depth, affected_population) VALUES
