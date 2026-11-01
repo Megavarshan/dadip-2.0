@@ -26,5 +26,9 @@ providers or simulated networks. **Planned** = not built yet.
 | Network degradation experiments (simulated, 630 runs) | Implemented | `simulation-results/v1`, `docs/research/communication-results.md`, `tests/unit/test_simulation.py` |
 | Circuit breaker (channel availability monitoring) in live dispatcher | Implemented | `test_channel_outage_holds_messages_without_burning_retries` |
 | Live fault-injected dispatch experiment (real Mosquitto) | Planned | |
-| Command centre on live API | Planned (Phase 6) | |
+| Command centre on live API: overview, incidents + AURA, alerts + approvals, communication, edge, audit, experiments | Implemented | Playwright walkthrough in Chrome (citizen report → AURA → alert → approval → MQTT delivery → edge ack); `next build` |
+| Public portal: map, help centres, rate-limited reports, 5-language UI (from original) | Implemented | same walkthrough (Tamil UI) |
+| Session in httpOnly cookie via backend-for-frontend proxy | Implemented | walkthrough; `test_client_ip_*` |
+| Live updates in the UI | Polling every 5 s (WebSocket endpoint exists, not used by the UI yet) | |
+| Deployment (frontend, backend, workers, broker) | Planned (Phase 9) | |
 | Docker Compose stack | Written, not yet run | |

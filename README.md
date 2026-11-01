@@ -18,7 +18,7 @@ reference baseline and is never modified from here.
 | Cloud Intelligence Core | FastAPI, PostgreSQL, Redis, workers, audit | `backend/dadip/` |
 | Resilient Communication Engine | Prioritised, retried, deduplicated, tracked delivery | `backend/dadip/comms/` |
 | Edge Intelligence Network | Offline-first edge agent over MQTT | `backend/dadip/edge/` |
-| Disaster Command Centre | Operator dashboard | `frontend/` |
+| Disaster Command Centre | Operator console and public portal on the live API | `frontend/` |
 | Network simulation | Reproducible comparison of delivery strategies | `backend/dadip/simulation/` |
 
 ## Quick start (local services)
@@ -36,17 +36,41 @@ uvicorn dadip.main:app --reload     # API docs: http://localhost:8000/api/docs
 pytest                              # needs the dadip_test database, see docs/development.md
 ```
 
-With Docker: `cp .env.example .env && docker compose up --build`.
+Background workers (separate terminals):
+
+```bash
+dadip-dispatcher          # sends approved alerts, records attempts, listens for MQTT acks
+dadip-edge-gateway        # ingests edge device events
+dadip-edge --device-id demo-01 --area supaul-district   # optional simulated edge device
+```
+
+Command centre:
+
+```bash
+cd frontend && npm ci
+DADIP_API_URL=http://localhost:8000 npm run dev        # http://localhost:3000/command
+```
+
+Experiments: `dadip-sim --seeds 30 --out ../simulation-results/latest` (see `docs/research/`).
+
+With Docker: `cp .env.example .env && docker compose up --build` (backend services; not yet verified, see status).
 
 ## Repository layout
 
 ```
 backend/        FastAPI app, AURA, communication engine, edge agent, simulator, migrations, tests
-frontend/       Next.js command centre (inherited from DADIP, being migrated to the new API)
+frontend/       Next.js command centre and public portal (backend-for-frontend proxy to FastAPI)
 legacy/         Original Python agent and Supabase SQL, kept for reference only
 infrastructure/ Broker and deployment configuration
 docs/           Architecture, development, research and the development log
 ```
+
+## Key documents
+
+- [`docs/research/communication-results.md`](docs/research/communication-results.md) — experiment results and limits
+- [`docs/research/aura.md`](docs/research/aura.md) — what AURA is, parity verification, findings
+- [`docs/architecture/communication.md`](docs/architecture/communication.md) — alert lifecycle and guarantees
+- [`docs/status.md`](docs/status.md) — implemented / simulated / planned, with the test that verifies each
 
 ## Honesty rules this project follows
 

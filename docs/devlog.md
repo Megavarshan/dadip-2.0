@@ -2,6 +2,34 @@
 
 Newest entries first. Every "verified" claim names the command that verified it.
 
+## 2026-11-01 — Phase 6: command centre
+
+**Done**
+
+- Replaced the mock-driven dashboards with a command centre on the FastAPI backend: overview, incidents with AURA
+  assessment view (provenance and uncertainty), alerts with approval, communication monitoring, edge devices,
+  audit log, experiment results. Public portal with map, help centres and report form, keeping the original
+  5-language UI strings.
+- Backend-for-frontend: login stores the JWT in an httpOnly cookie; `/api/backend/*` forwards to FastAPI;
+  `proxy.ts` guards `/command`.
+- Removed in-browser mock services, Supabase client, NextAuth with hard-coded demo users, and 135 unused packages.
+  Removed unsupported claims ("reduces unsafe decisions by 46%", RAG, transformers) from the landing page and
+  metadata; the landing page now quotes the committed simulation results, labelled as simulated.
+- Backend: client IP from `X-Forwarded-For` only from trusted proxies or with a shared secret; `/channels` says
+  whether each channel is configured.
+
+**Verified**
+
+- `pytest`: 392 passed. `npm ci`, `tsc --noEmit`, `eslint src` (0 errors), `next build`: pass.
+- Playwright + Chrome against the real stack (API, dispatcher, edge gateway, edge agent, Next production server):
+  citizen report submitted from the Tamil UI → operator ran AURA (ABSTAIN) and created an alert → approver
+  approved → SMS (mock) delivered and MQTT acknowledged by the edge device. Screenshots reviewed.
+
+**Found by looking at the screens, fixed**
+
+- Telegram and webhook were shown as REAL and offered for alerts without credentials; now "NOT CONFIGURED" and
+  hidden from the alert form.
+
 ## 2026-11-01 — Phase 7: communication experiments
 
 **Done**

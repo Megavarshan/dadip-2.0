@@ -1,22 +1,16 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { AuthProvider } from "@/components/auth-provider";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "DADIP — India Disaster Intelligence Platform",
-  description: "AI-powered disaster intelligence for India. Predicts cyclone, tsunami, flood, and earthquake risks with Decision-Admissibility architecture that reduces unsafe decisions by 46%.",
-  keywords: ["disaster intelligence", "India", "cyclone prediction", "tsunami warning", "flood monitoring", "earthquake", "NDRF", "NDMA", "AI", "decision admissibility"],
+  title: 'DADIP 2.0 — Disaster Intelligence & Resilient Communication',
+  description:
+    'DADIP 2.0: decision-admissibility disaster intelligence, an approval-gated communication engine with retry, deduplication and expiry, and offline-first edge devices over MQTT.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body suppressHydrationWarning className={`${inter.variable} font-sans antialiased`}>
-        <AuthProvider>{children}</AuthProvider>
-      </body>
+      <body suppressHydrationWarning className="font-sans antialiased">{children}</body>
     </html>
   );
 }

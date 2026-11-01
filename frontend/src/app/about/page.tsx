@@ -83,7 +83,7 @@ export default function AboutPage() {
               <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                 <p className="font-bold text-white">DADIP: Disaster Intelligence Platform</p>
                 <p className="text-sm text-slate-400 mt-1">
-                  Spearheaded the development of a smart disaster response system. The project integrates real-time satellite and seismic data with advanced uncertainty estimation algorithms to ensure government agencies act on highly reliable predictions, ultimately reducing false alarms and unsafe operations.
+                  Designed and built a disaster intelligence platform around decision admissibility: risk estimates are combined with reliability and distribution-shift checks so that low-confidence assessments are deferred to a human. DADIP 2.0 adds an approval-gated, fault-tolerant alert communication engine and offline-first edge devices.
                 </p>
               </div>
             </div>

@@ -105,3 +105,35 @@ def test_public_report_rate_limit(client, monkeypatch):
     monkeypatch.setattr(deps, "_limiter", deps.RateLimiter(None))  # memory backend, isolated from Redis
     codes = [client.post("/api/v1/reports", json=REPORT).status_code for _ in range(3)]
     assert codes == [201, 201, 429]
+
+
+def test_client_ip_trusts_forwarded_for_only_from_trusted_proxy(monkeypatch):
+    from starlette.requests import Request
+
+    from dadip.api.deps import client_ip
+    from dadip.core.config import get_settings
+
+    def req(peer, xff=None):
+        headers = [(b"x-forwarded-for", xff.encode())] if xff else []
+        return Request({"type": "http", "client": (peer, 1234), "headers": headers})
+
+    monkeypatch.setattr(get_settings(), "trusted_proxies", ["10.0.0.5"])
+    assert client_ip(req("10.0.0.5", "spoofed, 203.0.113.7")) == "203.0.113.7"
+    assert client_ip(req("198.51.100.9", "203.0.113.7")) == "198.51.100.9"   # untrusted peer: header ignored
+    assert client_ip(req("10.0.0.5")) == "10.0.0.5"
+
+
+def test_client_ip_trusts_forwarded_for_with_proxy_secret(monkeypatch):
+    from starlette.requests import Request
+
+    from dadip.api.deps import client_ip
+    from dadip.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "proxy_shared_secret", "s3cret-value")
+
+    def req(secret):
+        return Request({"type": "http", "client": ("52.1.2.3", 1), "headers": [
+            (b"x-forwarded-for", b"203.0.113.7"), (b"x-dadip-proxy-auth", secret.encode())]})
+
+    assert client_ip(req("s3cret-value")) == "203.0.113.7"
+    assert client_ip(req("wrong")) == "52.1.2.3"

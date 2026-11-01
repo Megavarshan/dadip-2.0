@@ -27,6 +27,12 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
     public_report_rate_per_minute: int = 10
+    # Addresses of reverse proxies (e.g. the Next.js frontend) whose X-Forwarded-For header is trusted for the
+    # client IP. Empty = never trust the header (a client could forge it to evade rate limits).
+    trusted_proxies: list[str] = Field(default_factory=list)
+    # Alternative for proxies without fixed addresses (e.g. Vercel functions): the proxy sends this secret in
+    # X-DADIP-Proxy-Auth. Unset = disabled.
+    proxy_shared_secret: str | None = None
 
     # Communication channels. A channel is only "real" when its credentials are present.
     telegram_bot_token: str | None = None

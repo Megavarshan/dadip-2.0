@@ -1,5 +1,6 @@
 """Request dependencies: database session, current user, role gates, rate limiting."""
 
+import hmac
 import logging
 import time
 import uuid
@@ -100,7 +101,18 @@ def get_limiter() -> RateLimiter:
 
 
 def client_ip(request: Request) -> str:
-    return request.client.host if request.client else "unknown"
+    """The real client address. Behind a trusted proxy, the last address that proxy appended to X-Forwarded-For
+    (the client it saw); otherwise the TCP peer. Untrusted peers cannot forge their address with the header."""
+    peer = request.client.host if request.client else "unknown"
+    xff = request.headers.get("x-forwarded-for")
+    s = get_settings()
+    secret_ok = bool(s.proxy_shared_secret) and hmac.compare_digest(
+        request.headers.get("x-dadip-proxy-auth", ""), s.proxy_shared_secret or "")
+    if xff and (peer in s.trusted_proxies or secret_ok):
+        hops = [h.strip() for h in xff.split(",") if h.strip()]
+        if hops:
+            return hops[-1]
+    return peer
 
 
 def public_report_limit(request: Request, limiter: Annotated[RateLimiter, Depends(get_limiter)]) -> None:

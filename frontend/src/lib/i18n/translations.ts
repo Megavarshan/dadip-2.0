@@ -3,9 +3,10 @@
 // ============================================================
 // Supports English (primary), Tamil, Hindi, Kannada, Telugu
 
-import { Language } from '@/lib/types';
+export type Language = 'en' | 'ta' | 'hi' | 'kn' | 'te';
+export const LANGUAGES: Record<Language, string> = { en: 'English', ta: 'தமிழ்', hi: 'हिन्दी', kn: 'ಕನ್ನಡ', te: 'తెలుగు' };
 
-type TranslationKeys =
+export type TranslationKeys =
   | 'app.title' | 'app.tagline' | 'app.subtitle'
   | 'nav.dashboard' | 'nav.monitoring' | 'nav.map' | 'nav.predictions'
   | 'nav.reliability' | 'nav.alerts' | 'nav.reports' | 'nav.helpCenters'

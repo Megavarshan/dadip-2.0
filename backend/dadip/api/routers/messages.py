@@ -12,7 +12,7 @@ from dadip.api.deps import Admin, DbSession, Operator
 from dadip.api.routers.alerts import MessageBrief
 from dadip.api.schemas import ORM, Page
 from dadip.comms.dispatcher import acknowledge
-from dadip.comms.service import verify_ack_token
+from dadip.comms.service import available_channels, verify_ack_token
 from dadip.core.config import get_settings
 from dadip.core.security import decode_access_token
 from dadip.db.models import ChannelConfig, DeliveryAttempt, Message, MessageEvent
@@ -117,6 +117,7 @@ class ChannelOut(ORM):
     name: str
     enabled: bool
     is_mock: bool
+    configured: bool = False  # credentials / settings present so the dispatcher can actually use it
 
 
 class ChannelPatch(BaseModel):
@@ -124,8 +125,10 @@ class ChannelPatch(BaseModel):
 
 
 @router.get("/channels", response_model=list[ChannelOut])
-def channels(db: DbSession, _: Operator) -> list[ChannelConfig]:
-    return list(db.scalars(select(ChannelConfig).order_by(ChannelConfig.name)))
+def channels(db: DbSession, _: Operator) -> list[ChannelOut]:
+    usable = available_channels()
+    return [ChannelOut(name=c.name, enabled=c.enabled, is_mock=c.is_mock, configured=c.name in usable)
+            for c in db.scalars(select(ChannelConfig).order_by(ChannelConfig.name))]
 
 
 @router.patch("/channels/{name}", response_model=ChannelOut)
@@ -137,7 +140,7 @@ def set_channel(name: str, body: ChannelPatch, db: DbSession, user: Admin) -> Ch
     audit.record(db, "SET_CHANNEL", actor_id=user.id, resource_type="channel", resource_id=name,
                  details={"enabled": body.enabled})
     db.commit()
-    return ch
+    return ChannelOut(name=ch.name, enabled=ch.enabled, is_mock=ch.is_mock, configured=ch.name in available_channels())
 
 
 @router.websocket("/live")

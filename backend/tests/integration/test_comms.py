@@ -336,3 +336,14 @@ def test_channel_outage_holds_messages_without_burning_retries(client, incident_
     db.expire_all()
     assert {m.state for m in db.scalars(select(Message))} == {"delivered"}
     assert len(sms.sent) == 5
+
+
+def test_channels_report_whether_configured(client, auth_header, db):
+    from dadip.db.models import ChannelConfig
+
+    db.add_all([ChannelConfig(name="mock_sms", enabled=True, is_mock=True),
+                ChannelConfig(name="telegram", enabled=True, is_mock=False)])
+    db.commit()
+    rows = {c["name"]: c for c in client.get("/api/v1/channels", headers=auth_header("operator")).json()}
+    assert rows["mock_sms"]["configured"] is True
+    assert rows["telegram"]["configured"] is False  # no bot token in the test environment
